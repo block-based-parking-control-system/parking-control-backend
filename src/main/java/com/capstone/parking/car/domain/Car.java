@@ -44,7 +44,7 @@ public class Car {
 
         status = CarStatus.PARKED;
 
-        return movingInfo.getCurrentLocation();
+        return movingInfo.getCurrentLocation().getPoint();
     }
 
     /**
