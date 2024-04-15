@@ -22,7 +22,7 @@ public class Car {
      * @param route 관제 시스템으로부터 제공받은 이동경로
      * @return 제공받은 이동 경로, 예상 소요 시간, 현재 위치를 포함하는 이동 정보
      */
-    public MovingInfo enter(List<Point> route) {
+    public MovingInfo startEntering(List<Point> route) {
         if (status != CarStatus.BEFORE_ENTER) {
             throw new InvalidCarStatusException();
         }
@@ -34,11 +34,25 @@ public class Car {
     }
 
     /**
+     * 차량 주차(입차) 완료
+     * @return 주차한 위치
+     */
+    public Point completeEntering() {
+        if (status != CarStatus.ENTERING) {
+            throw new InvalidCarStatusException();
+        }
+
+        status = CarStatus.PARKED;
+
+        return movingInfo.getCurrentLocation();
+    }
+
+    /**
      * 차량 출차 시도
      * @param route 관제 시스템으로부터 제공받은 이동경로
      * @return 제공받은 이동 경로, 예상 소요 시간, 현재 위치를 포함하는 이동 정보
      */
-    public MovingInfo depart(List<Point> route) {
+    public MovingInfo startDeparture(List<Point> route) {
         if (status != CarStatus.PARKED) {
             throw new InvalidCarStatusException();
         }
@@ -47,6 +61,17 @@ public class Car {
 
         movingInfo = new MovingInfo(route);
         return movingInfo;
+    }
+
+    /**
+     * 차량 출차 완료
+     */
+    public void completeDeparture() {
+        if (status != CarStatus.DEPARTING) {
+            throw new InvalidCarStatusException();
+        }
+
+        status = CarStatus.DEPARTURE_COMPLETE;
     }
 
 

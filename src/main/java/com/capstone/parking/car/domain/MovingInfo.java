@@ -1,8 +1,11 @@
 package com.capstone.parking.car.domain;
 
+import lombok.Getter;
+
 import java.awt.*;
 import java.util.List;
 
+@Getter
 public class MovingInfo {
 
     private List<Point> route; //이동 경로
