@@ -1,5 +1,6 @@
 package com.capstone.parking.car.domain;
 
+import com.capstone.parking.car.domain.exception.InvalidCarStatusException;
 import lombok.Getter;
 
 import java.awt.Point;
@@ -23,9 +24,9 @@ public class Car {
      */
     public MovingInfo enter(List<Point> route) {
         if (status != CarStatus.BEFORE_ENTER) {
-            //TODO 예외 처리
-            return null;
+            throw new InvalidCarStatusException();
         }
+
         status = CarStatus.ENTERING;
 
         movingInfo = new MovingInfo(route);
@@ -39,9 +40,9 @@ public class Car {
      */
     public MovingInfo depart(List<Point> route) {
         if (status != CarStatus.PARKED) {
-            //TODO 예외 처리
-            return null;
+            throw new InvalidCarStatusException();
         }
+
         status = CarStatus.DEPARTING;
 
         movingInfo = new MovingInfo(route);
