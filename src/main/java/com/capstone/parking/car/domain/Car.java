@@ -38,7 +38,7 @@ public class Car {
      * @return 제공받은 이동 경로, 예상 소요 시간, 현재 위치를 포함하는 이동 정보
      */
     public MovingInfo depart(List<Point> route) {
-        if (status != CarStatus.BEFORE_DEPARTURE) {
+        if (status != CarStatus.PARKED) {
             //TODO 예외 처리
             return null;
         }
