@@ -5,6 +5,7 @@
 
 #Docker
 .env
+volume/
 
 # application.yml 민감 정보
 src/main/resources/application-database.yml
