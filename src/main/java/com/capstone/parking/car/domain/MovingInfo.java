@@ -12,8 +12,6 @@ public class MovingInfo {
 
     private List<Point> route; //이동 경로
 
-    private Integer expectedTime; //예상 소요 시간
-
     private Location currentLocation; //현재 위치
     private Location nextLocation; //다음 위치
     private int nextLocationIdx;
@@ -25,12 +23,6 @@ public class MovingInfo {
         //TODO 예외 처리? (route 리스트에 0,1 번 원소가 없는 경우)
         this.currentLocation = new Location(route.get(0), true);
         this.nextLocation = new Location(route.get(nextLocationIdx), false);
-        calculateExpectedTime(route);
-    }
-
-    //TODO route 로부터 예상 소요 시간 계산
-    private void calculateExpectedTime(List<Point> route) {
-
     }
 
     /**
