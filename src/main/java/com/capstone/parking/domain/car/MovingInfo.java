@@ -1,6 +1,6 @@
-package com.capstone.parking.domain;
+package com.capstone.parking.domain.car;
 
-import com.capstone.parking.domain.exception.InvalidOccupyInfoException;
+import com.capstone.parking.domain.car.exception.InvalidOccupyInfoException;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 

@@ -1,4 +1,4 @@
-package com.capstone.parking.domain.exception;
+package com.capstone.parking.domain.car.exception;
 
 public class InvalidCarStatusException extends RuntimeException{
 
