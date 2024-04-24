@@ -1,6 +1,6 @@
-package com.capstone.parking.car.domain;
+package com.capstone.parking.domain;
 
-import com.capstone.parking.car.domain.exception.InvalidCarStatusException;
+import com.capstone.parking.domain.exception.InvalidCarStatusException;
 import lombok.Getter;
 
 import java.awt.Point;

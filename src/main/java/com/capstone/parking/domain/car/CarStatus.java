@@ -1,4 +1,4 @@
-package com.capstone.parking.car.domain;
+package com.capstone.parking.domain;
 
 public enum CarStatus {
 
