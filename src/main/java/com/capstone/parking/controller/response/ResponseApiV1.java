@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Getter
-public class ResponseApi<T> {
+public class ResponseApiV1<T> {
 
     private final Boolean success;
 

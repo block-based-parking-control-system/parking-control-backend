@@ -1,6 +1,8 @@
 package com.capstone.parking.controller;
 
-import com.capstone.parking.controller.response.ResponseApi;
+import com.capstone.parking.controller.response.ResponseApiV1;
+import com.capstone.parking.controller.response.ResponseApiV2;
+import com.capstone.parking.controller.response.ResponseType;
 import com.capstone.parking.service.CarService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -34,7 +36,7 @@ public class CarControllerV2 {
      * 4. 3번 도중 장애물에 의해 이동 경로가 갱신되면(이벤트 발생 (1초마다 검사하는 게 X)), 갱신된 EntranceRouteInfo(갱신된 이동 경로 + 갱신된 주차할 위치) 를 반환
      *      4-1. 이후 3번 과정 반복
      * 5. 마지막 반환값: 정상적으로 주차됐는지 여부
-     * <p>
+     *
      * 기본적으로는 1초에 한 번씩 현재 위치를 스트리밍함
      * 그러나 이동 경로가 갱신되면 1초의 텀을 무시하고 그 즉시 새로운 EntranceRoute 데이터를 스트리밍 해야함
      * 이후로는 다시 1초에 한 번씩 현재 위치 스트리밍
@@ -42,15 +44,14 @@ public class CarControllerV2 {
      */
     @GetMapping(value = "/entrance", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public ResponseEntity<Flux> enter() {
-        AtomicBoolean firstRequest = new AtomicBoolean(true);
 
-        Flux<ResponseApi> dataStream = Mono.just(
-                new ResponseApi<>(true, carService.loadEntranceRoute())
+        Flux<ResponseApiV2> dataStream = Mono.just(
+                new ResponseApiV2<>(ResponseType.ENTRANCE_ROUTE, carService.loadEntranceRoute())
                 ).flux()
                 .concatWith(
                         Flux.interval(Duration.ZERO, Duration.ofSeconds(1))
                                 .map(sequence ->
-                                        new ResponseApi(true, new Point((int) Math.random(), (int) Math.random()))
+                                        new ResponseApiV2(ResponseType.CURRENT_LOCATION_SINGLE, new Point((int) Math.random(), (int) Math.random()))
                                 )
                 );
 
@@ -74,10 +75,10 @@ public class CarControllerV2 {
      */
     //TODO carId 파라미터를 받지 말고 인증 처리를 해서 세션이나 토큰 값으로 Car 엔티티를 찾기
     @GetMapping("/exit")
-    public ResponseEntity<ResponseApi> exit(@RequestParam("id") Long carId) {
+    public ResponseEntity<ResponseApiV1> exit(@RequestParam("id") Long carId) {
         List<Point> route = carService.loadExitRoute(carId);
 
         //TODO SSE 이용
-        return new ResponseEntity<>(new ResponseApi(true, route), HttpStatus.OK);
+        return new ResponseEntity<>(new ResponseApiV1(true, route), HttpStatus.OK);
     }
 }
