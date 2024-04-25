@@ -8,6 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @SpringBootApplication
 @RequiredArgsConstructor
 public class ParkingApplication {
@@ -23,9 +26,12 @@ public class ParkingApplication {
      */
     @PostConstruct
     public void init() {
-        for (int i = 0; i < 100; i++) {
-            parkingLotRepository.save(new ParkingLotEn(ParkingStatus.NON_OCCUPIED));
+        List<ParkingLotEn> tobeSaved = new ArrayList<>();
+        for (int i = 1; i <= 100; i++) {
+            tobeSaved.add(new ParkingLotEn((long) i, ParkingStatus.NON_OCCUPIED));
         }
+
+        parkingLotRepository.saveAll(tobeSaved);
     }
 
 }
