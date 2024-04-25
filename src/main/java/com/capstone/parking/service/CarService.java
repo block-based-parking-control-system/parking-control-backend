@@ -2,12 +2,10 @@ package com.capstone.parking.service;
 
 import com.capstone.parking.entity.car.CarEn;
 import com.capstone.parking.entity.parkinglot.ParkingLotEn;
-import com.capstone.parking.entity.parkinglot.ParkingStatus;
 import com.capstone.parking.repository.CarRepository;
 import com.capstone.parking.repository.ParkingLotRepository;
 import com.capstone.parking.service.dto.EntranceRouteInfo;
 import com.capstone.parking.util.temp.RandomRouteGenerator;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,7 +14,6 @@ import java.awt.*;
 import java.util.List;
 
 import static com.capstone.parking.domain.car.CarStatus.BEFORE_ENTER;
-import static com.capstone.parking.domain.car.CarStatus.PARKED;
 
 @Service
 @RequiredArgsConstructor
