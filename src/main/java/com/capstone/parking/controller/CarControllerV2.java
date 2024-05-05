@@ -18,7 +18,6 @@ import reactor.core.publisher.Mono;
 import java.awt.*;
 import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @RestController
 @RequestMapping("/api/v2/car")
@@ -38,7 +37,7 @@ public class CarControllerV2 {
      * 5. 마지막 반환값: 정상적으로 주차됐는지 여부
      *
      * 기본적으로는 1초에 한 번씩 현재 위치를 스트리밍함
-     * 그러나 이동 경로가 갱신되면 1초의 텀을 무시하고 그 즉시 새로운 EntranceRoute 데이터를 스트리밍 해야함
+     * 그러나 이동 경로가 갱신되면 위의 규칙을 무시하고 그 즉시 새로운 EntranceRoute 데이터를 스트리밍 해야함
      * 이후로는 다시 1초에 한 번씩 현재 위치 스트리밍
      * TODO 비동기를 써야 하는지
      */
