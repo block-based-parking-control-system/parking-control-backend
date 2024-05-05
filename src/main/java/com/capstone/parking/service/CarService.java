@@ -17,12 +17,12 @@ import static com.capstone.parking.domain.car.CarStatus.BEFORE_ENTER;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class CarService {
 
     private final CarRepository carRepository;
     private final ParkingLotRepository parkingLotRepository;
 
+    @Transactional
     public EntranceRouteInfo loadEntranceRoute() {
         EntranceRouteInfo routeInfo = RandomRouteGenerator.generateEntranceRoute(); //TODO 챠량과의 통신을 구축하기 전에 임시로 작성한 코드
 
@@ -37,6 +37,7 @@ public class CarService {
         return routeInfo;
     }
 
+    @Transactional
     public List<Point> loadExitRoute(Long carId) {
         CarEn foundCar = carRepository.findById(carId).orElseThrow();
         if (!foundCar.isParked()) {
@@ -47,5 +48,13 @@ public class CarService {
         foundCar.readyToExit();
 
         return route;
+    }
+
+    public Point getCurrentSingleLocation() {
+        return RandomRouteGenerator.generateRandomSinglePoint(); //TODO 챠량과의 통신을 구축하기 전에 임시로 작성한 코드
+    }
+
+    public List<Point> getCurrentDoubleLocation() {
+        return RandomRouteGenerator.generateRandomDoublePoint(); //TODO 챠량과의 통신을 구축하기 전에 임시로 작성한 코드
     }
 }

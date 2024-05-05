@@ -6,6 +6,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 /**
  * TODO 변경 예정
@@ -41,4 +42,27 @@ public class RandomRouteGenerator {
         return pointList;
     }
 
+    public static Point generateRandomSinglePoint() {
+        Random random = new Random();
+
+        int x = random.nextInt(51);
+        int y = random.nextInt(51);
+
+        return new Point(x, y);
+    }
+
+    public static List<Point> generateRandomDoublePoint() {
+        Random random = new Random();
+
+        List<Point> pointList = new ArrayList<>();
+
+        for (int i = 0; i < 2; i++) {
+            int x = random.nextInt(51);
+            int y = random.nextInt(51);
+
+            pointList.add(new Point(x, y));
+        }
+
+        return pointList.stream().toList();
+    }
 }
