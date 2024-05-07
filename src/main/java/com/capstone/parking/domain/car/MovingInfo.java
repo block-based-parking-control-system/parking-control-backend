@@ -1,86 +1,67 @@
 package com.capstone.parking.domain.car;
 
-import com.capstone.parking.domain.car.exception.InvalidOccupyInfoException;
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 
-@Getter
+
 public class MovingInfo {
 
     private List<Point> route; //이동 경로
 
-    private Location currentLocation; //현재 위치
-    private Location nextLocation; //다음 위치
-    private int nextLocationIdx;
+    private List<Integer> currentIndexes; //현재 위치에 해당하는 route 의 인덱스 (최대 2칸 점유 가능)
+
+    private int nextIndex;
 
     public MovingInfo(List<Point> route) {
         this.route = route;
-        this.nextLocationIdx = 1;
+        this.currentIndexes = new ArrayList<>();
 
-        //TODO 예외 처리? (route 리스트에 0,1 번 원소가 없는 경우)
-        this.currentLocation = new Location(route.get(0), true);
-        this.nextLocation = new Location(route.get(nextLocationIdx), false);
+        nextIndex = 0;
     }
 
-    /**
-     * 차량이 두 개의 구간을 점유하기 시작할 때 호출
-     */
-    public void occupyDoubleLocation() {
-        if (nextLocation == Location.END_POINT) {
-            throw new InvalidOccupyInfoException();
+    public List<Integer> getCurrentIndexes() {
+        if (currentIndexes.size() == 1 && nextIndex >= route.size()) {
+            return null;
         }
-        nextLocation.changeToBeOccupied();
+
+        return currentIndexes;
     }
 
-    /**
-     * 두 구간을 점유하고 있는 차량이 뒤쪽 구간을 완전히 빠져나올 때 호출
-     */
-    public void moveForward() {
-        currentLocation = nextLocation;
-
-        if (nextLocationIdx < route.size() - 1) {
-            nextLocation = new Location(route.get(++nextLocationIdx), false);
-        } else {
-            nextLocation = Location.END_POINT;
+    public List<Point> getCurrentLocation() {
+        if (!moveForward()) {
+            return null;
         }
 
-        //TODO 이렇게 한 칸 이동할 때마다 도착 예상 시작을 재계산하는 것이 좋을 듯 (초 단위로 하지 말고)
+        List<Point> result = changeToPointList();
+        return result;
     }
 
-    /*
-    private boolean isAdjacent(Point current, Point next) {
-        return (Math.abs(current.getX() - next.getX()) == 1 && current.getY() == next.getY())
-                || (Math.abs(current.getY() - next.getY()) == 1 && current.getX() == next.getX());
+    private boolean moveForward() {
+        if (nextIndex >= route.size()) {
+            return false;
+        }
+
+        if (currentIndexes.size() == 2) { //현재 두 칸 점유
+            currentIndexes.remove(0);
+            nextIndex++;
+        } else if (currentIndexes.size() == 1){ //현재 한 칸 점유
+            currentIndexes.add(nextIndex);
+        } else { //최초 이동
+            currentIndexes.add(nextIndex++);
+        }
+        return true;
     }
-    */
 
-    @Getter
-    static class Location {
+    private List<Point> changeToPointList() {
+        List<Point> result = new ArrayList<>();
 
-        static final Location END_POINT = new Location();
-
-        private Point point;
-        private Boolean occupied;
-
-        private Location() {
-            this.point = null;
-            this.occupied = null;
+        for (Integer i : currentIndexes) {
+            result.add(route.get(i));
         }
 
-        Location(@NotNull Point point, @NotNull Boolean occupied) {
-            this.point = point;
-            this.occupied = occupied;
-        }
-
-        void changeToBeOccupied() {
-            if (occupied) {
-                throw new InvalidOccupyInfoException();
-            }
-
-            occupied = true;
-        }
+        return result;
     }
 }

@@ -37,7 +37,7 @@ public class Car {
      * 차량 주차(입차) 완료
      * @return 주차한 위치
      */
-    public Point completeEntering() {
+/*    public Point completeEntering() {
         if (status != CarStatus.ENTERING) {
             throw new InvalidCarStatusException();
         }
@@ -45,7 +45,7 @@ public class Car {
         status = CarStatus.PARKED;
 
         return movingInfo.getCurrentLocation().getPoint();
-    }
+    }*/
 
     /**
      * 차량 출차 시도

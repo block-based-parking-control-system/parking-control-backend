@@ -2,6 +2,7 @@ package com.capstone.parking.controller;
 
 import com.capstone.parking.controller.response.ResponseApiV3;
 import com.capstone.parking.controller.response.ResponseType;
+import com.capstone.parking.domain.car.MovingInfo;
 import com.capstone.parking.service.CarService;
 import com.capstone.parking.service.dto.EntranceRouteInfo;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.ServerSentEvent;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -16,10 +18,13 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import reactor.core.publisher.Flux;
 
+import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -30,6 +35,7 @@ import java.util.stream.Stream;
 public class CarControllerV3 {
 
     private final CarService carService;
+    private final MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter;
 
     @GetMapping(value = "/example", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<String>> example() throws IOException {
@@ -65,26 +71,25 @@ public class CarControllerV3 {
     public Flux<ServerSentEvent<ResponseApiV3<?>>> enterV3() {
         AtomicInteger counter = new AtomicInteger(1); //sse 스트리밍 카운터
 
+        EntranceRouteInfo routeInfo = carService.loadEntranceRoute();
         ResponseApiV3<EntranceRouteInfo> initialEntranceRoute
-                = ResponseApiV3.of(true, ResponseType.ENTRANCE_ROUTE, carService.loadEntranceRoute());
+                = ResponseApiV3.of(true, ResponseType.ENTRANCE_ROUTE, routeInfo);
 
         Flux<ServerSentEvent<ResponseApiV3<?>>> result = Flux.just(
                 buildSse(counter, initialEntranceRoute)
         );
 
-
-        /*
-        TODO 실제로는 Point 가 들어올지 List<Point> 가 들어올지 모름. 어느 타입의 값이 들어오든 받을 수 있도록 수정
-            해결책: 애초에 carService.getCurrentLocation() 의 반환 타입을 List 로 지정. Point 하나든 두개든 받을 수 있도록
-         */
-        result = result.mergeWith(
+        MovingInfo movingInfo = new MovingInfo(routeInfo.getRoute());
+        result = result.concatWith(
                 Flux.interval(Duration.ofMillis(1000))
-                        .map(tick -> carService.getCurrentSingleLocation())
-                        .map(point ->
-                                buildSse(counter, ResponseApiV3.of(true, ResponseType.CURRENT_SINGLE_LOCATION, point))
+                        .map(tick -> movingInfo.getCurrentLocation())
+                        .map(pointList -> {
+                                    if (pointList.size() == 1) return buildSse(counter, ResponseApiV3.of(true, ResponseType.CURRENT_SINGLE_LOCATION, pointList));
+                                    else return buildSse(counter, ResponseApiV3.of(true, ResponseType.CURRENT_DOUBLE_LOCATION, pointList));
+                                }
                         )
                         .takeUntil(
-                                serverSentEvent -> Integer.parseInt(serverSentEvent.id()) > 10 //TODO 차량과 통신을 시작하면, 이 부분을 '새로운 경로를 받았을 경우' 로 수정
+                                serverSentEvent -> Integer.parseInt(serverSentEvent.id()) > 4 //TODO 차량과 통신을 시작하면, 이 부분을 '새로운 경로를 받았을 경우' 로 수정
                         )
         );
 
@@ -92,14 +97,23 @@ public class CarControllerV3 {
         TODO 차량과 통신을 시작하면, 아래 코드는 새로운 경로를 받는 이벤트가 발생한 경우에만 수행
             위의 result.mergeWith(...) 코드와 묶어서 반복문 형태로 만들면 되지 않을까 싶음
          */
+        EntranceRouteInfo updatedRouteInfo = carService.loadEntranceRoute();
+        ResponseApiV3<EntranceRouteInfo> initialEntranceRoute2
+                = ResponseApiV3.of(true, ResponseType.ENTRANCE_ROUTE, updatedRouteInfo);
+
+        result = result.concatWith(
+                Flux.just(buildSse(counter, initialEntranceRoute2))
+        );
+
+        MovingInfo updatedmovingInfo = new MovingInfo(updatedRouteInfo.getRoute());
         result = result.concatWith(
                 Flux.interval(Duration.ofMillis(1000))
-                        .map(tick -> carService.getCurrentDoubleLocation())
-                        .map(pointList ->
-                                buildSse(counter, ResponseApiV3.of(true, ResponseType.CURRENT_DOUBLE_LOCATION, pointList))
-                        )
-                        .takeUntil(
-                                serverSentEvent -> Integer.parseInt(serverSentEvent.id()) > 20 //TODO 차량과 통신을 시작하면, 이 부분을 '새로운 경로를 받았을 경우' 로 수정
+                        .takeWhile(tick -> updatedmovingInfo.getCurrentIndexes() != null)
+                        .map(tick -> updatedmovingInfo.getCurrentLocation())
+                        .map(pointList -> {
+                                    if (pointList.size() == 1) return buildSse(counter, ResponseApiV3.of(true, ResponseType.CURRENT_SINGLE_LOCATION, pointList));
+                                    else return buildSse(counter, ResponseApiV3.of(true, ResponseType.CURRENT_DOUBLE_LOCATION, pointList));
+                                }
                         )
         );
 

@@ -30,7 +30,7 @@ public class RandomRouteGenerator {
 
         List<Point> pointList = new ArrayList<>();
 
-        int numberOfPoints = random.nextInt(6) + 5;
+        int numberOfPoints = random.nextInt(2) + 5;
 
         for (int i = 0; i < numberOfPoints; i++) {
             int x = random.nextInt(51);
