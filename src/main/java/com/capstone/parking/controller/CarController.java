@@ -1,6 +1,6 @@
 package com.capstone.parking.controller;
 
-import com.capstone.parking.controller.response.ResponseApiV3;
+import com.capstone.parking.controller.response.ResponseApi;
 import com.capstone.parking.controller.response.ResponseType;
 import com.capstone.parking.domain.car.MovingInfo;
 import com.capstone.parking.service.CarService;
@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.ServerSentEvent;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,24 +17,20 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import reactor.core.publisher.Flux;
 
-import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 @RestController
-@RequestMapping("/api/v3/car")
+@RequestMapping("/api/test/car")
 @RequiredArgsConstructor
 @Slf4j
-public class CarControllerV3 {
+public class CarController {
 
     private final CarService carService;
-    private final MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter;
 
     @GetMapping(value = "/example", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<String>> example() throws IOException {
@@ -68,14 +63,14 @@ public class CarControllerV3 {
      * 이후로는 다시 1초에 한 번씩 현재 위치 스트리밍
      **/
     @GetMapping(value = "/entrance", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ServerSentEvent<ResponseApiV3<?>>> enterV3() {
+    public Flux<ServerSentEvent<ResponseApi<?>>> enterV3() {
         AtomicInteger counter = new AtomicInteger(1); //sse 스트리밍 카운터
 
         EntranceRouteInfo routeInfo = carService.loadEntranceRoute();
-        ResponseApiV3<EntranceRouteInfo> initialEntranceRoute
-                = ResponseApiV3.of(true, ResponseType.ENTRANCE_ROUTE, routeInfo);
+        ResponseApi<EntranceRouteInfo> initialEntranceRoute
+                = ResponseApi.of(true, ResponseType.ENTRANCE_ROUTE, routeInfo);
 
-        Flux<ServerSentEvent<ResponseApiV3<?>>> result = Flux.just(
+        Flux<ServerSentEvent<ResponseApi<?>>> result = Flux.just(
                 buildSse(counter, initialEntranceRoute)
         );
 
@@ -84,8 +79,8 @@ public class CarControllerV3 {
                 Flux.interval(Duration.ofMillis(1000))
                         .map(tick -> movingInfo.getCurrentLocation())
                         .map(pointList -> {
-                                    if (pointList.size() == 1) return buildSse(counter, ResponseApiV3.of(true, ResponseType.CURRENT_SINGLE_LOCATION, pointList));
-                                    else return buildSse(counter, ResponseApiV3.of(true, ResponseType.CURRENT_DOUBLE_LOCATION, pointList));
+                                    if (pointList.size() == 1) return buildSse(counter, ResponseApi.of(true, ResponseType.CURRENT_SINGLE_LOCATION, pointList));
+                                    else return buildSse(counter, ResponseApi.of(true, ResponseType.CURRENT_DOUBLE_LOCATION, pointList));
                                 }
                         )
                         .takeUntil(
@@ -98,8 +93,8 @@ public class CarControllerV3 {
             위의 result.mergeWith(...) 코드와 묶어서 반복문 형태로 만들면 되지 않을까 싶음
          */
         EntranceRouteInfo updatedRouteInfo = carService.loadEntranceRoute();
-        ResponseApiV3<EntranceRouteInfo> initialEntranceRoute2
-                = ResponseApiV3.of(true, ResponseType.ENTRANCE_ROUTE, updatedRouteInfo);
+        ResponseApi<EntranceRouteInfo> initialEntranceRoute2
+                = ResponseApi.of(true, ResponseType.ENTRANCE_ROUTE, updatedRouteInfo);
 
         result = result.concatWith(
                 Flux.just(buildSse(counter, initialEntranceRoute2))
@@ -111,8 +106,8 @@ public class CarControllerV3 {
                         .takeWhile(tick -> updatedmovingInfo.getCurrentIndexes() != null)
                         .map(tick -> updatedmovingInfo.getCurrentLocation())
                         .map(pointList -> {
-                                    if (pointList.size() == 1) return buildSse(counter, ResponseApiV3.of(true, ResponseType.CURRENT_SINGLE_LOCATION, pointList));
-                                    else return buildSse(counter, ResponseApiV3.of(true, ResponseType.CURRENT_DOUBLE_LOCATION, pointList));
+                                    if (pointList.size() == 1) return buildSse(counter, ResponseApi.of(true, ResponseType.CURRENT_SINGLE_LOCATION, pointList));
+                                    else return buildSse(counter, ResponseApi.of(true, ResponseType.CURRENT_DOUBLE_LOCATION, pointList));
                                 }
                         )
         );
@@ -120,8 +115,8 @@ public class CarControllerV3 {
         return result;
     }
 
-    private static ServerSentEvent<ResponseApiV3<?>> buildSse(AtomicInteger counter, ResponseApiV3<?> responseApi) {
-        return ServerSentEvent.<ResponseApiV3<?>>builder()
+    private static ServerSentEvent<ResponseApi<?>> buildSse(AtomicInteger counter, ResponseApi<?> responseApi) {
+        return ServerSentEvent.<ResponseApi<?>>builder()
                 .id(String.valueOf(counter.getAndIncrement()))
                 .data(responseApi)
                 .event(responseApi.getType().getDescription())

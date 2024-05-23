@@ -1,15 +1,23 @@
 package com.capstone.parking.controller.response;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
+@Builder
 @Getter
-public class ResponseApiV2<T> {
+public class ResponseApi<T> {
+
+    private final Boolean success;
 
     private final ResponseType type;
 
     private final T data;
+
+    public static <T> ResponseApi<T> of(Boolean success, ResponseType type, T data) {
+        return new ResponseApi<>(success, type, data);
+    }
 
     /*public static <T> ResponseApiV2<T> entranceRoute(T data) {
         return new ResponseApiV2<>(ResponseType.ENTRANCE_ROUTE, data);
@@ -30,4 +38,5 @@ public class ResponseApiV2<T> {
     public static <T> ResponseApiV2<T> failure(T data) {
         return new ResponseApiV2<>(ResponseType.FAILURE, data);
     }*/
+
 }
