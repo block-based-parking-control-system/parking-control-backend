@@ -1,10 +1,13 @@
 package com.capstone.parking;
 
+import com.capstone.parking.config.websocket.RosBridgeClient;
 import com.capstone.parking.entity.parkinglot.ParkingLotEn;
 import com.capstone.parking.entity.parkinglot.ParkingStatus;
 import com.capstone.parking.repository.ParkingLotRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -13,9 +16,11 @@ import java.util.List;
 
 @SpringBootApplication
 @RequiredArgsConstructor
-public class ParkingApplication {
+@Slf4j
+public class ParkingApplication implements CommandLineRunner {
 
     private final ParkingLotRepository parkingLotRepository;
+    private final RosBridgeClient rosBridgeClient;
 
     public static void main(String[] args) {
         SpringApplication.run(ParkingApplication.class, args);
@@ -32,6 +37,21 @@ public class ParkingApplication {
         }
 
         parkingLotRepository.saveAll(tobeSaved);
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+        boolean isConnected = rosBridgeClient.connectBlocking();
+
+        log.info("Connected to ROS Bridge server: {}", isConnected);
+
+        /*
+        // 예제: 토픽 구독
+        rosBridgeClient.subscribe("/example_topic");
+
+        // 예제: 토픽 발행
+        rosBridgeClient.publish("/example_topic", "Hello ROS!");
+        */
     }
 
 }

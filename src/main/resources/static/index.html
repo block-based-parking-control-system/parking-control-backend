@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ROS Bridge Example</title>
+    <script src="https://cdn.jsdelivr.net/npm/roslib/build/roslib.min.js"></script>
+</head>
+<body>
+<h1>ROS Bridge Example</h1>
+<button onclick="connect()">Connect to ROS</button>
+<p id="status">Disconnected</p>
+<p id="message"></p>
+
+<script>
+    var ros;
+
+    function connect() {
+        // ROS Bridge 서버에 연결
+        ros = new ROSLIB.Ros({
+            url: 'ws://172.19.12.107:9090'
+        });
+
+        ros.on('connection', function() {
+            document.getElementById('status').innerText = 'Connected';
+            console.log('Connected to websocket server.');
+        });
+
+        ros.on('error', function(error) {
+            document.getElementById('status').innerText = 'Error';
+            console.log('Error connecting to websocket server: ', error);
+        });
+
+        ros.on('close', function() {
+            document.getElementById('status').innerText = 'Closed';
+            console.log('Connection to websocket server closed.');
+        });
+
+        // '/chatter' 토픽을 구독
+        var listener = new ROSLIB.Topic({
+            ros: ros,
+            name: '/chatter',
+            messageType: 'std_msgs/String'
+        });
+
+        listener.subscribe(function(message) {
+            document.getElementById('message').innerText = 'Received message: ' + message.data;
+            console.log('Received message on ' + listener.name + ': ' + message.data);
+        });
+    }
+</script>
+</body>
+</html>
