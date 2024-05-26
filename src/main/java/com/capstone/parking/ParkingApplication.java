@@ -43,7 +43,7 @@ public class ParkingApplication implements CommandLineRunner {
     public void run(String... args) throws Exception {
         boolean isConnected = rosBridgeClient.connectBlocking();
 
-        log.info("Connected to ROS Bridge server: {}", isConnected);
+        log.info("ROS Bridge connection result: {}", isConnected);
 
         /*
         // 예제: 토픽 구독

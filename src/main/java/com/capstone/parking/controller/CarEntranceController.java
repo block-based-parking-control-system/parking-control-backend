@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 
+import java.util.concurrent.atomic.AtomicLong;
+
+import static com.capstone.parking.controller.response.ResponseType.ENTRANCE_ROUTE;
 import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
 
 @RestController
@@ -24,7 +27,30 @@ public class CarEntranceController {
 
     @GetMapping(produces = TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<ResponseApi<?>>> entrance() {
+        if (rosBridgeClient.isClosed()) {
+            rosBridgeClient.reconnect();
+            log.info("[GET /api/car/entrance] reconnected to ROS Bridge");
+        }
 
+        AtomicLong counter = new AtomicLong(1L);
+
+        String topic = "/waypoints";
+        rosBridgeClient.subscribe(topic);
+
+        return null;
+        /*
+        return Flux.create(sink -> {
+            rosBridgeClient.addMessageHandler(topic, message -> {
+                ResponseApi<String> responseApi = ResponseApi.of(true, ENTRANCE_ROUTE, message);
+                ServerSentEvent<ResponseApi<?>> event = ServerSentEvent.<ResponseApi<?>>builder()
+                        .id(String.valueOf(counter.getAndIncrement()))
+                        .event("entrance_route")
+                        .data(responseApi)
+                        .build();
+                sink.next(event);
+            });
+        });
+        */
     }
 
 }
