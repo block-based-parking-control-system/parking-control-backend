@@ -54,9 +54,10 @@ public class RosBridgeClient extends WebSocketClient {
         log.info("Published message: {} - {}", topic, message);
     }
 
+    //ROS Bridge 서버에 구독 요청을 보냄
     public String subscribe(String topic) {
         String jsonMessage = String.format("{\"op\":\"subscribe\",\"topic\":\"%s\"}", topic);
-        this.send(jsonMessage);
+        this.send(jsonMessage); //구독 요청. 이후 ROS Bridge 서버가 주기적으로 해당 토픽에 관한 메시지를 웹소켓을 통해 보내면 받을 수 있음
 
         String result = topics.stream().filter(topic::equals)
                 .findFirst()
