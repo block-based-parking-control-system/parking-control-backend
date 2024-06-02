@@ -1,6 +1,6 @@
 package com.capstone.parking.controller;
 
-import com.capstone.parking.config.websocket.RosBridgeClient;
+import com.capstone.parking.config.rosbridge.RosBridgeClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,12 +27,12 @@ public class RosController {
     }
 
     @GetMapping("/subscribe")
-    public String subscribe(@RequestParam("topic") String topic) {
+    public void subscribe(@RequestParam("topic") String topic) {
         if (rosBridgeClient.isClosed()) {
             rosBridgeClient.reconnect();
         }
         log.info("ready state : {}", rosBridgeClient.getReadyState());
-        return rosBridgeClient.subscribe(topic);
+        rosBridgeClient.subscribe(null, topic);
     }
 }
 

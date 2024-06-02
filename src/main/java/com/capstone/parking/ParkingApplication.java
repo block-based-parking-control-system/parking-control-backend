@@ -1,6 +1,6 @@
 package com.capstone.parking;
 
-import com.capstone.parking.config.websocket.RosBridgeClient;
+import com.capstone.parking.config.rosbridge.RosBridgeClient;
 import com.capstone.parking.entity.parkinglot.ParkingLotEn;
 import com.capstone.parking.entity.parkinglot.ParkingStatus;
 import com.capstone.parking.repository.ParkingLotRepository;
@@ -13,6 +13,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Future;
 
 @SpringBootApplication
 @RequiredArgsConstructor
@@ -45,13 +47,13 @@ public class ParkingApplication implements CommandLineRunner {
 
         log.info("ROS Bridge connection result: {}", isConnected);
 
-        /*
+
         // 예제: 토픽 구독
-        rosBridgeClient.subscribe("/example_topic");
+        //rosBridgeClient.subscribe("/example_topic");
 
         // 예제: 토픽 발행
-        rosBridgeClient.publish("/example_topic", "Hello ROS!");
-        */
+        //rosBridgeClient.publish("/example_topic", "Hello ROS!");
+
     }
 
 }
