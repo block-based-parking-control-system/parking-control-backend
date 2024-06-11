@@ -1,5 +1,6 @@
 package com.capstone.parking.config.rosbridge;
 
+import com.capstone.parking.config.rosbridge.dto.impl.RosPublish;
 import com.capstone.parking.config.rosbridge.dto.impl.RosSubscribe;
 import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.client.WebSocketClient;
@@ -58,6 +59,9 @@ public class RosBridgeClient extends WebSocketClient {
         log.info("[onMessage] Received message: {}", message);
         for (SseEmitter emitter : sseEmitters) {
             try {
+                //TODO json 형태의 message 변수를 객체로 변환해서 해당 객체의 타입(ResponseType)을 결졍
+                //      타입에 따라 적절한 ResponseDto 를 생성해 send
+
                 emitter.send(SseEmitter.event()
                         .name("waypoints")
                         .data(message)
@@ -88,7 +92,7 @@ public class RosBridgeClient extends WebSocketClient {
     }
 
     public void publish(String topic, String message) {
-        String jsonMessage = String.format("{\"op\":\"publish\",\"topic\":\"%s\",\"msg\":{\"data\":\"%s\"}}", topic, message);
+        String jsonMessage = RosPublish.of(topic, message).toJson();
         this.send(jsonMessage);
         log.info("[publish] Published message: {} - {}", topic, message);
     }

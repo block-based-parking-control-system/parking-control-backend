@@ -24,6 +24,8 @@ public class CarEntranceController {
             rosBridgeClient.reconnect();
             log.info("[GET /api/car/entrance] reconnected to ROS Bridge");
         }
+         //entrance_start 토픽으로 start 메시지 발행 -> ros bridge가
+        rosBridgeClient.publish("/entrance_start", "start");
 
         SseEmitter emitter = new SseEmitter();
 
