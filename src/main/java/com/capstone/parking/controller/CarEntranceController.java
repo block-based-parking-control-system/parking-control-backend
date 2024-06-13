@@ -34,6 +34,9 @@ public class CarEntranceController {
 
         rosBridgeClient.subscribe(emitter, "/Rout");
 
+        // 비활성 상태 체크 시작
+        rosBridgeClient.startInactivityCheck();
+
         return emitter;
     }
 
