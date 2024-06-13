@@ -12,7 +12,7 @@ spring:
 
   mvc:
     async:
-      request-timeout: 150000
+      request-timeout: 160000
 
 logging.level:
   org.hibernate.SQL: debug
