@@ -21,7 +21,6 @@ import java.util.concurrent.Future;
 @Slf4j
 public class ParkingApplication implements CommandLineRunner {
 
-    private final ParkingLotRepository parkingLotRepository;
     private final RosBridgeClient rosBridgeClient;
 
     public static void main(String[] args) {
@@ -31,7 +30,7 @@ public class ParkingApplication implements CommandLineRunner {
     /**
      * TODO 임시 코드
      */
-    @PostConstruct
+/*    @PostConstruct
     public void init() {
         List<ParkingLotEn> tobeSaved = new ArrayList<>();
         for (int i = 1; i <= 100; i++) {
@@ -39,14 +38,13 @@ public class ParkingApplication implements CommandLineRunner {
         }
 
         parkingLotRepository.saveAll(tobeSaved);
-    }
+    }*/
 
     @Override
     public void run(String... args) throws Exception {
         boolean isConnected = rosBridgeClient.connectBlocking();
 
         log.info("ROS Bridge connection result: {}", isConnected);
-
 
         // 예제: 토픽 구독
         //rosBridgeClient.subscribe("/example_topic");
