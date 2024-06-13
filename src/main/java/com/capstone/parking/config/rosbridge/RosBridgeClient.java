@@ -3,11 +3,14 @@ package com.capstone.parking.config.rosbridge;
 import com.capstone.parking.config.rosbridge.dto.impl.RosPublish;
 import com.capstone.parking.config.rosbridge.dto.impl.RosSubscribe;
 import com.capstone.parking.config.rosbridge.topics.ROutTopic;
+import com.capstone.parking.controller.response.dto.Completion;
 import com.capstone.parking.controller.response.dto.Location;
 import com.capstone.parking.controller.response.dto.ResponseDto;
+import com.capstone.parking.controller.response.dto.ResponseType;
 import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -16,10 +19,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Instant;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
 import static com.capstone.parking.controller.response.dto.ResponseType.CURRENT_LOCATION;
 
@@ -37,13 +36,8 @@ public class RosBridgeClient extends WebSocketClient {
     // 마지막 메시지 수신 시간을 추적하기 위한 필드
     private Instant lastMessageTime = Instant.now();
 
-    // 비활성 상태를 체크하기 위한 스케줄링 서비스
-    private ScheduledExecutorService scheduler;
-    private ScheduledFuture<?> inactivityCheckTask;
-
     public RosBridgeClient() throws URISyntaxException {
         super(new URI(SERVER_URI));
-        this.scheduler = Executors.newScheduledThreadPool(1);
     }
 
     @Override
@@ -85,7 +79,6 @@ public class RosBridgeClient extends WebSocketClient {
     @Override
     public void onClose(int code, String reason, boolean remote) {
         log.info("[onClose] Connection closed: {}", reason);
-        stopInactivityCheck(); // 연결이 닫힐 때 비활성 상태 체크 중지
     }
 
     @Override
@@ -116,34 +109,27 @@ public class RosBridgeClient extends WebSocketClient {
         emitter.onError((e) -> sseEmitters.remove(emitter));
     }
 
-    // 비활성 상태 체크 작업 시작
-    public void startInactivityCheck() {
-        stopInactivityCheck(); // 기존 작업 중지
+    // 비활성 상태를 확인하는 예약 작업
+    @Scheduled(fixedRate = 500) // 500밀리초마다 확인
+    private void checkInactivity() {
+        Instant now = Instant.now();
+        if (now.minusMillis(INACTIVITY_TIMEOUT_MS).isAfter(lastMessageTime)) {
+            log.info("[checkInactivity] 1초 이상 메시지가 수신되지 않았습니다. SSE emitters를 닫습니다.");
 
-        inactivityCheckTask = scheduler.scheduleAtFixedRate(() -> {
-            Instant now = Instant.now();
-            if (now.minusMillis(INACTIVITY_TIMEOUT_MS).isAfter(lastMessageTime)) {
-                log.info("[checkInactivity] 1초 이상 메시지가 수신되지 않았습니다. SSE emitters를 닫습니다.");
-
-                // 타임아웃된 모든 emitters를 닫습니다.
-                for (SseEmitter emitter : sseEmitters) {
-                    try {
-                        emitter.send(SseEmitter.event().name("timeout").data("비활성화로 인해 연결이 종료되었습니다."));
-                        emitter.complete();
-                    } catch (IOException e) {
-                        log.error("[checkInactivity] emitter를 닫는 중 오류 발생", e);
-                        emitter.completeWithError(e);
-                    }
+            // 타임아웃된 모든 emitters를 닫습니다.
+            for (SseEmitter emitter : sseEmitters) {
+                try {
+                    emitter.send(
+                            SseEmitter.event()
+                                    .data(ResponseDto.of(ResponseType.COMPLETION, Completion.success()))
+                    );
+                    emitter.complete();
+                } catch (IOException e) {
+                    log.error("[checkInactivity] emitter를 닫는 중 오류 발생", e);
+                    emitter.completeWithError(e);
                 }
-                sseEmitters.clear(); // 닫은 후 모든 emitters를 삭제
             }
-        }, 0, 500, TimeUnit.MILLISECONDS); // 500 밀리초마다 확인
-    }
-
-    // 비활성 상태 체크 작업 중지
-    public void stopInactivityCheck() {
-        if (inactivityCheckTask != null && !inactivityCheckTask.isCancelled()) {
-            inactivityCheckTask.cancel(true);
+            sseEmitters.clear(); // 닫은 후 모든 emitters를 삭제
         }
     }
 }
