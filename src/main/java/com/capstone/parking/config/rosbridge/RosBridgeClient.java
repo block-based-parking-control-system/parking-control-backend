@@ -110,7 +110,7 @@ public class RosBridgeClient extends WebSocketClient {
     }
 
     // 비활성 상태를 확인하는 예약 작업
-    @Scheduled(fixedRate = 500) // 500밀리초마다 확인
+    @Scheduled(fixedRate = 1000) // 1000밀리초마다 확인
     private void checkInactivity() {
         Instant now = Instant.now();
         if (now.minusMillis(INACTIVITY_TIMEOUT_MS).isAfter(lastMessageTime)) {

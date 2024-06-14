@@ -15,9 +15,12 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.lang.Math.PI;
+
 @AllArgsConstructor
 @NoArgsConstructor
-@Getter @Setter
+@Getter
+@Setter
 @ToString
 @Slf4j
 public class ROutTopic {
@@ -56,11 +59,11 @@ public class ROutTopic {
 
         int idx = entranceRoute.indexOf(current);
         if (occupiedType == 1) { //2칸 점유 (현재칸, 앞칸)
-            if (idx != entranceRoute.size() - 1) {
+            if (idx != -1 && idx < entranceRoute.size()) {
                 location.add(entranceRoute.get(idx + 1));
             }
         } else if (occupiedType == 2) { //2칸 점유 (현재칸, 뒷칸)
-            if (idx != 0) {
+            if (idx != -1 && idx != 0) {
                 location.add(entranceRoute.get(idx - 1));
             }
         }
@@ -69,30 +72,42 @@ public class ROutTopic {
     }
 
     private int getOccupiedType(double positionX, double positionY) {
-        double digitY = ((-1) * positionY) % 10;
+        double radian = getQuaternionDirection(this.getMsg().getOrientation());
 
-        if (digitY >= 0 && digitY < 2.5) {
-            log.info("[ROutTopic.toLocation()] occupiedType: {}, 앞칸 + 현재칸, x", 1);
-            return 1; //2칸 점유(현재칸, 앞칸)
-        }
-        if (digitY>= 7.5) {
-            log.info("[ROutTopic.toLocation()] occupiedType: {}, 뒷칸 + 현재칸, x", 2);
-            return 2; //2칸 점유(현재칸, 뒷칸)
-        }
+        if (radian >= PI / 4 && radian <= (5 * PI) / 6) { //y축 방향으로 이동 중
+            double digitY = ((-1) * positionY) % 10;
 
-        double digitX = positionX % 10;
+            if (digitY >= 0 && digitY < 2.5) {
+                log.info("[ROutTopic.toLocation()] occupiedType: {}, 앞칸 + 현재칸, x", 1);
+                return 1; //2칸 점유(현재칸, 앞칸)
+            }
+            if (digitY >= 7.5) {
+                log.info("[ROutTopic.toLocation()] occupiedType: {}, 뒷칸 + 현재칸, x", 2);
+                return 2; //2칸 점유(현재칸, 뒷칸)
+            }
+        } else { //x축 방향으로 이동 중
+            double digitX = positionX % 10;
 
-        if (digitX >= 2.5 && digitX < 5) {
-            log.info("[ROutTopic.toLocation()] occupiedType: {}, 앞칸 + 현재칸, y", 1);
-            return 1; //2칸 점유(현재칸, 앞칸)
-        }
-        if (digitX >= 5 && digitX < 7.5) {
-            log.info("[ROutTopic.toLocation()] occupiedType: {}, 뒷칸 + 현재칸, y", 2);
-            return 2; //2칸 점유(현재칸, 뒷칸)
+            if (digitX >= 2.5 && digitX < 5) {
+                log.info("[ROutTopic.toLocation()] occupiedType: {}, 앞칸 + 현재칸, y", 1);
+                return 1; //2칸 점유(현재칸, 앞칸)
+            }
+            if (digitX >= 5 && digitX < 7.5) {
+                log.info("[ROutTopic.toLocation()] occupiedType: {}, 뒷칸 + 현재칸, y", 2);
+                return 2; //2칸 점유(현재칸, 뒷칸)
+            }
         }
 
         log.info("[ROutTopic.toLocation()] occupiedType: {}, 현재칸", 0);
         return 0; //1칸 점유(현재칸)
+    }
+
+    private double getQuaternionDirection(Orientation orientation) {
+        double vectorX = orientation.getW(); // j 성분
+        double vectorY = orientation.getZ(); // k 성분
+
+        // 반환되는 각도는 라디안 단위
+        return Math.atan2(vectorY, vectorX);
     }
 
     @AllArgsConstructor
