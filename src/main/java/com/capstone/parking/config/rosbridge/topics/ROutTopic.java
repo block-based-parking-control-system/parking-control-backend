@@ -50,7 +50,7 @@ public class ROutTopic {
 
         int occupiedType = getOccupiedType(positionX, positionY);
 
-        int y = (115 - (int) positionX) / 10 + 1;
+        int y = (int)(115 - positionX) / 10 + 1;
         int x = (int) ((-1) * positionY) / 10;
 
         List<Point> location = new ArrayList<>();
