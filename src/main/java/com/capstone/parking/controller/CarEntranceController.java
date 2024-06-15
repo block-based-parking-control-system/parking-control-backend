@@ -1,20 +1,18 @@
 package com.capstone.parking.controller;
 
-import com.capstone.parking.config.websocket.RosBridgeClient;
-import com.capstone.parking.controller.response.ResponseApi;
-import com.capstone.parking.service.CarService;
+import com.capstone.parking.config.rosbridge.RosBridgeClient;
+import com.capstone.parking.controller.response.dto.EntranceInit;
+import com.capstone.parking.controller.response.dto.ResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Flux;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.util.concurrent.atomic.AtomicLong;
+import java.io.IOException;
 
-import static com.capstone.parking.controller.response.ResponseType.ENTRANCE_ROUTE;
-import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
+import static com.capstone.parking.controller.response.dto.ResponseType.ENTRANCE_ROUTE;
 
 @RestController
 @RequestMapping("/api/car/entrance")
@@ -23,34 +21,32 @@ import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
 public class CarEntranceController {
 
     private final RosBridgeClient rosBridgeClient;
-    private final CarService carService;
 
-    @GetMapping(produces = TEXT_EVENT_STREAM_VALUE)
-    public Flux<ServerSentEvent<ResponseApi<?>>> entrance() {
+    @GetMapping
+    public SseEmitter entrance() {
         if (rosBridgeClient.isClosed()) {
             rosBridgeClient.reconnect();
             log.info("[GET /api/car/entrance] reconnected to ROS Bridge");
         }
 
-        AtomicLong counter = new AtomicLong(1L);
+        SseEmitter emitter = new SseEmitter();
+        sendMessage(emitter, ResponseDto.of(ENTRANCE_ROUTE, EntranceInit.create()));
 
-        String topic = "/waypoints";
-        rosBridgeClient.subscribe(topic);
+        rosBridgeClient.subscribe(emitter, "/Rout");
 
-        return null;
-        /*
-        return Flux.create(sink -> {
-            rosBridgeClient.addMessageHandler(topic, message -> {
-                ResponseApi<String> responseApi = ResponseApi.of(true, ENTRANCE_ROUTE, message);
-                ServerSentEvent<ResponseApi<?>> event = ServerSentEvent.<ResponseApi<?>>builder()
-                        .id(String.valueOf(counter.getAndIncrement()))
-                        .event("entrance_route")
-                        .data(responseApi)
-                        .build();
-                sink.next(event);
-            });
-        });
-        */
+        return emitter;
+    }
+
+    private static void sendMessage(SseEmitter emitter, ResponseDto<?> responseDto) {
+        try {
+            emitter.send(
+                    SseEmitter.event()
+                            .data(responseDto)
+            );
+        } catch (IOException e) {
+            log.error("[CarEntranceController] Error occurred while sending message", e);
+            emitter.completeWithError(e);
+        }
     }
 
 }
